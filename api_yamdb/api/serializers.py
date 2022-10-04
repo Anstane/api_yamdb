@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework import validators
 
 from .models import User
 
@@ -6,7 +7,6 @@ from .models import User
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор модели User."""
 
-    # ^[\w.@+-]+\z
     class Meta:
         model = User
         fields = (
@@ -18,5 +18,4 @@ class UserSerializer(serializers.ModelSerializer):
             "role",
         )
         lookup_field = "username"
-
-
+        read_only_field = ('role',)
