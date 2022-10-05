@@ -5,8 +5,23 @@ from rest_framework import filters, mixins, viewsets, status, response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, permission_classes
 
-from .models import User, Category, Genre, Title
-from .serializers import UserSerializer, CategorySerializer, GenreSerializer, TitleSerializer
+from .permissions import IsAuthorOrReadOnlyPermission
+from titles.models import (
+    User,
+    Category,
+    Genre,
+    Title,
+    Review,
+    Comment
+)
+from .serializers import (
+    UserSerializer,
+    CategorySerializer,
+    GenreSerializer,
+    TitleSerializer,
+    ReviewSerializer,
+    CommentSerializer
+)
 
 
 @api_view(['POST'])
@@ -45,3 +60,41 @@ class TitleViewSet(viewsets.ModelViewSet):
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category', 'genre', 'name', 'year',)
+
+
+# Пока не знаю как реализовать permisson для администратора и модератора
+class ReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewSerializer
+    permission_classes = (IsAuthorOrReadOnlyPermission,)
+
+    def get_queryset(self):
+        title = get_object_or_404(
+            Title, pk=self.kwargs.get('title_id')
+        )
+        new_queryset = Review.objects.filter(title=title)
+        return new_queryset
+
+    def perform_create(self, serializer):
+        title = get_object_or_404(
+            Title, pk=self.kwargs.get('title_id')
+        )
+        serializer.save(author=self.request.user, title=title)
+
+
+# Проблема аналогичная предыдущему вьюсету
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    permission_classes = (IsAuthorOrReadOnlyPermission,)
+
+    def get_queryset(self):
+        review = get_object_or_404(
+            Review, pk=self.kwargs.get('review_id')
+        )
+        new_queryset = Comment.objects.filter(review=review)
+        return new_queryset
+
+    def perform_create(self, serializer):
+        review = get_object_or_404(
+            Review, pk=self.kwargs.get('review_id')
+        )
+        serializer.save(author=self.request.user, review=review)

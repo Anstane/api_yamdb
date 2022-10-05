@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'api.apps.ApiConfig',
+    'titles.apps.TitlesConfig',
     'django_filters',
 ]
 
@@ -119,7 +120,7 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static/'),)
 
 # Authentification
 
-AUTH_USER_MODEL = 'api.User'
+AUTH_USER_MODEL = 'titles.User'
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
