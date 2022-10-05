@@ -1,5 +1,23 @@
-from .models import Category, Genre, Title
 from rest_framework import serializers
+
+from .models import User, Category, Genre, Title
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор модели User."""
+
+    class Meta:
+        model = User
+        fields = (
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "bio",
+            "role",
+        )
+        lookup_field = "username"
+        read_only_field = ('role',)
 
 
 class CategorySerializer(serializers.ModelSerializer):
