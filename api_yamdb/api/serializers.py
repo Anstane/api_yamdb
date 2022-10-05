@@ -8,6 +8,9 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = Category
 
+    class Meta:
+        fields = '__all__'
+        model = Category
 
 class GenreSerializer(serializers.ModelSerializer):
 
