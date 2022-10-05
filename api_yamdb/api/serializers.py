@@ -1,7 +1,6 @@
 from rest_framework import serializers
-from rest_framework import validators
 
-from .models import User
+from .models import User, Category, Genre, Title
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -19,3 +18,37 @@ class UserSerializer(serializers.ModelSerializer):
         )
         lookup_field = "username"
         read_only_field = ('role',)
+
+
+class CategorySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        fields = '__all__'
+        model = Category
+
+
+class GenreSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        fields = '__all__'
+        model = Genre
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    genre = serializers.SlugRelatedField(
+        read_only=True, slug_field='???'
+    )
+    category = serializers.SlugRelatedField(
+        read_only=True, slug_field='???'
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Title
+
+    # Нельзя добавлять произведения, которые еще не вышли (год выпуска не может быть больше текущего)
+    def validate_year(self, value):
+        year = dt.date.today().year
+        if not value > year:
+            raise serializers.ValidationError('Проверьте год поблукации!')
+        return value

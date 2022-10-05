@@ -1,7 +1,12 @@
-from email.policy import default
-from django.contrib.auth.models import AbstractUser
-from django.db import models
 import uuid
+from email.policy import default
+
+from django.contrib.auth.models import AbstractUser
+from django.contrib.auth import get_user_model
+from django.db import models
+
+
+# User = get_user_model() - модель потом переопределяется, полагаю, надобности в этой стороке уже нет
 
 
 class User(AbstractUser):
@@ -64,3 +69,33 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+# Стоит ли нам обрезать метод __str__ по первым 15 символам?
+class Category(models.Model):
+    name = models.CharField(max_length=256)
+    slug = models.SlugField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name[:15]
+
+
+class Genre(models.Model):
+    name = models.CharField(max_length=256)
+    slug = models.SlugField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name[:15]
+
+
+class Title(models.Model):
+    name = models.TextField()
+    year = models.DateTimeField('Год публикации')
+    description = models.TextField()
+    genre = models.ForeignKey(
+        Genre, on_delete=models.CASCADE, related_name='titles')
+    category = models.ForeignKey(
+        Category, on_delete=models.CASCADE, related_name='titles')
+
+    def __str__(self):
+        return self.name[:15]
