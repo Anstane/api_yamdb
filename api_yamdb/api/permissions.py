@@ -1,25 +1,30 @@
 from rest_framework import permissions
 
-from .models import User
+from titles.models import User
 
 
 class IsAuthorOrReadOnlyPermission(permissions.BasePermission):
     """Автор или только для чтения."""
 
     def has_object_permission(self, request, view, obj):
-        return any((
-            request.method in permissions.SAFE_METHODS,
-            request.user == obj,
-        ))
+        return (
+            request.method in permissions.SAFE_METHODS
+            or request.user == obj
+        )
+
 
 class IsAdmin(permissions.BasePermission):
     """Администратор."""
 
     def has_permission(self, request, view):
-        return all((
-            request.user.is_authenticated,
-            request.user.role == User.ADMIN,
-        ))
+        user = request.user
+        return (
+            user.is_authenticated
+            and (
+                user.is_superuser
+                or user.role == User.ADMIN
+            )
+        )
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
@@ -27,10 +32,10 @@ class IsAdminOrReadOnly(permissions.BasePermission):
 
     def has_permission(self, request, view):
         user = request.user
-        return any((
-            request.method in permissions.SAFE_METHODS,
-            all((
-                user.is_authenticated,
-                user.role == User.ADMIN,
-            )),
-        ))
+        return (
+            request.method in permissions.SAFE_METHODS
+            or (
+                user.is_authenticated
+                and user.role == User.ADMIN
+            )
+        )
