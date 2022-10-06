@@ -62,6 +62,13 @@ class User(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
+        constraints = (
+            models.UniqueConstraint(
+                fields=('username', 'confirmation_code',),
+                name='unique_username_confirmation_code'
+            ),
+        )
+
     def __str__(self):
         return self.username
 
