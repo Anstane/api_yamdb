@@ -16,9 +16,13 @@ class IsAdmin(permissions.BasePermission):
     """Администратор."""
 
     def has_permission(self, request, view):
+        user = request.user
         return all((
-            request.user.is_authenticated,
-            request.user.role == User.ADMIN,
+            user.is_authenticated,
+            any((
+                user.is_superuser,
+                user.role == User.ADMIN,
+            ))
         ))
 
 
