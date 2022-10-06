@@ -11,7 +11,8 @@ from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from api_yamdb import settings
-from .permissions import IsAuthorOrReadOnlyPermission, IsAdmin
+from .permissions import IsAuthorOrReadOnlyPermission, IsAdmin, IsAdminOrReadOnly
+from .mixins import CreateDestroyListViewSet
 from titles.models import (
     User,
     Category,
@@ -154,16 +155,18 @@ class UsersViewSet(viewsets.ModelViewSet):
         )
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(CreateDestroyListViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(CreateDestroyListViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
@@ -171,6 +174,7 @@ class GenreViewSet(viewsets.ModelViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category', 'genre', 'name', 'year',)
 
@@ -178,7 +182,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 # Пока не знаю как реализовать permisson для администратора и модератора
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (IsAuthorOrReadOnlyPermission,)
+    permission_classes = (IsAuthorOrReadOnlyPermission, IsAdminOrReadOnly)
 
     def get_queryset(self):
         title = get_object_or_404(
@@ -197,7 +201,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 # Проблема аналогичная предыдущему вьюсету
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (IsAuthorOrReadOnlyPermission,)
+    permission_classes = (IsAuthorOrReadOnlyPermission, IsAdminOrReadOnly)
 
     def get_queryset(self):
         review = get_object_or_404(
