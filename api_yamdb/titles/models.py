@@ -54,7 +54,7 @@ class User(AbstractUser):
         default=uuid.uuid4(),
         editable=False,
         unique=True,
-        blank=True, null=True,
+        blank=False, null=False,
     )
 
     class Meta:
