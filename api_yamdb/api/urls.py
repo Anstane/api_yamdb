@@ -16,7 +16,6 @@ app_name = 'api'
 
 router = routers.DefaultRouter()
 router.register(r'users', UsersViewSet)
-# router.register(r'users/<username>', UsersViewSet) - не совсем понял назначения этой строки
 router.register(r'categories', CategoryViewSet)
 router.register(r'genres', GenreViewSet)
 router.register(r'titles', TitleViewSet)
