@@ -70,18 +70,6 @@ class AuthetificationSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     confirmation_code = serializers.CharField(required=True)
 
-    class Meta:
-        fields = '__all__'
-        model = User
-
-        validators = (
-            serializers.UniqueTogetherValidator(
-                queryset=User.objects.all(),
-                fields=('username', 'confirmation_code',),
-                message='Дублируется код подтверждения.'
-            ),
-        )
-
 
 class CategorySerializer(serializers.ModelSerializer):
 

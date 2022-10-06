@@ -53,8 +53,7 @@ class User(AbstractUser):
     confirmation_code = models.UUIDField(
         default=uuid.uuid4(),
         editable=False,
-        unique=True,
-        blank=False, null=False,
+        unique=False,
     )
 
     class Meta:
