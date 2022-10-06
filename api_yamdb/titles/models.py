@@ -1,12 +1,7 @@
 import uuid
-from email.policy import default
 
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth import get_user_model
 from django.db import models
-
-
-# User = get_user_model() - модель потом переопределяется, полагаю, надобности в этой стороке уже нет
 
 
 class User(AbstractUser):
@@ -56,7 +51,7 @@ class User(AbstractUser):
         blank=False, null=False,
     )
     confirmation_code = models.UUIDField(
-        default="",
+        default=uuid.uuid4(),
         editable=False,
         unique=True,
         blank=True, null=True,
@@ -66,6 +61,13 @@ class User(AbstractUser):
         ordering = ('username',)
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+
+        constraints = (
+            models.UniqueConstraint(
+                fields=('username', 'confirmation_code',),
+                name='unique_username_confirmation_code'
+            ),
+        )
 
     def __str__(self):
         return self.username
@@ -99,3 +101,39 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name[:15]
+
+
+class Review(models.Model):
+    text = models.TextField()
+    score = models.IntegerField()
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='reviews')
+    title = models.ForeignKey(
+        Title, on_delete=models.CASCADE, related_name='reviews')
+    pub_date = models.DateTimeField(
+        'Дата публикации', auto_now_add=True)
+
+    class Meta:
+        ordering = ['pub_date']
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(score__gte=1) & models.Q(score__lt=10),
+                name='Значение score от 1 до 10',
+            )
+        ]
+
+    def __str__(self):
+        return self.text[:15]
+
+
+class Comment(models.Model):
+    text = models.TextField()
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='comments')
+    review = models.ForeignKey(
+        Review, on_delete=models.CASCADE, related_name='comments')
+    pub_date = models.DateTimeField(
+        'Дата публикации', auto_now_add=True)
+
+    def __str__(self):
+        return self.text[:15]

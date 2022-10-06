@@ -1,6 +1,9 @@
-from rest_framework import serializers
+import datetime as dt
+import re
 
-from .models import User, Category, Genre, Title
+from rest_framework import serializers, validators
+
+from titles.models import User, Category, Genre, Title, Review, Comment
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -18,6 +21,54 @@ class UserSerializer(serializers.ModelSerializer):
         )
         lookup_field = "username"
         read_only_field = ('role',)
+
+
+class RegistrationSerializer(serializers.Serializer):
+    """Сериализатор данных регистрации."""
+
+    username = serializers.CharField(
+        validators=(
+            validators.UniqueValidator(
+                queryset=User.objects.all(),
+                message='Имя занято.'
+            ),
+        ),
+        required=True,
+    )
+
+    email = serializers.EmailField(
+        validators=(
+            validators.UniqueValidator(
+                queryset=User.objects.all(),
+                message='Email уже зарегистрирован.'
+            ),
+        ),
+        required=True,
+    )
+
+    def validate_username(self, value):
+        """Валидация поля username."""
+
+        if value.lower() == 'me':
+            raise serializers.ValidationError(
+                "Имя зарезервировано."
+            )
+
+        if not re.match(r'^[\w.@+-]+\Z', value):  # шаблон из задания, может \Z
+            #  r'^[\w.@+-]+)$' # шаблон из примеров
+            #  r'^users/(?P<username>[\w.@+-]+)$' # шаблон для username
+            raise serializers.ValidationError(
+                "Неверный формат имени."
+            )
+
+        return value
+
+
+class AuthetificationSerializer(serializers.Serializer):
+    """Сериализатор данных аутентификации."""
+
+    username = serializers.CharField(required=True)
+    confirmation_code = serializers.CharField(required=True)
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -49,9 +100,34 @@ class TitleSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = Title
 
-    # Нельзя добавлять произведения, которые еще не вышли (год выпуска не может быть больше текущего)
+    # Нельзя добавлять произведения, которые еще не вышли
+    # (год выпуска не может быть больше текущего)
     def validate_year(self, value):
         year = dt.date.today().year
         if not value > year:
             raise serializers.ValidationError('Проверьте год поблукации!')
         return value
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Review
+        read_only_fields = ('title',)
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Comment
+        read_only_fields = ('review',)
