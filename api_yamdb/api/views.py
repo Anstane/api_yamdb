@@ -11,7 +11,11 @@ from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from api_yamdb import settings
-from .permissions import IsAuthorOrReadOnlyPermission, IsAdmin, IsAdminOrReadOnly
+from .permissions import (
+    IsAuthorOrReadOnlyPermission,
+    IsAdmin,
+    IsAdminOrReadOnly,
+)
 from .mixins import CreateDestroyListViewSet
 from titles.models import (
     User,
@@ -122,6 +126,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = (IsAdmin,)
     filter_backends = (filters.SearchFilter,)
+    lookup_field = 'username'
     search_fields = ('username',)
 
     @action(
