@@ -3,6 +3,7 @@ import uuid
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from django.core.mail import send_mail
+from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework import filters, viewsets, status, response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -36,30 +37,38 @@ from .serializers import (
 def send_confirmation_code(request):
     """View-функция url auth/signup/."""
 
-    serializer = RegistrationSerializer(data=request.data)
+    username = request.data.get('username')
+    email = request.data.get('email')
 
-    if not serializer.is_valid():
-        # Данные некорректны
-        return response.Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST,
+    try:
+        user = User.objects.get(username=username, email=email)
+
+        confirmation_code = str(uuid.uuid4())
+        user.confirmation_code = confirmation_code
+        user.save()
+
+        data = request.data
+
+    except ObjectDoesNotExist:
+        serializer = RegistrationSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            # Данные некорректны
+            return response.Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        username = serializer.validated_data.get('username')
+        email = serializer.validated_data.get('email')
+        confirmation_code = str(uuid.uuid4())
+
+        User.objects.get_or_create(
+            username=username,
+            email=email,
+            confirmation_code=confirmation_code,
         )
-
-    email = serializer.validated_data.get('email')
-    username = serializer.validated_data.get('username')
-    confirmation_code = str(uuid.uuid4())
-
-    _, created = User.objects.get_or_create(
-        username=username,
-        email=email,
-        confirmation_code=confirmation_code
-    )
-    if not created:
-        # Пользователь уже существует
-        return response.Response(
-            serializer.data,
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        data = serializer.data
 
     send_mail(
         username,
@@ -70,7 +79,7 @@ def send_confirmation_code(request):
     )
 
     return response.Response(
-        serializer.data,
+        data,
         status=status.HTTP_200_OK,
     )
 
@@ -92,16 +101,15 @@ def get_token(request):
     user = get_object_or_404(User, username=username)
 
     confirmation_code = serializer.validated_data.get('confirmation_code')
-    if user.confirmation_code != confirmation_code:
+    if confirmation_code != str(user.confirmation_code):
         # Неверный код подтверждения
         return response.Response(
             serializer.data,
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    token = RefreshToken.for_user(user)
     return response.Response(
-        {'token': str(token.access_token)},
+        {'token': str(RefreshToken.for_user(user).access_token)},
         status=status.HTTP_200_OK,
     )
 

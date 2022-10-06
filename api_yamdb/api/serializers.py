@@ -54,9 +54,9 @@ class RegistrationSerializer(serializers.Serializer):
                 "Имя зарезервировано."
             )
 
-        if not re.match(r'^[\w.@+-]+\z', value): # шаблон из задания, может \Z
-        # if not re.match(r'^[\w.@+-]+)$', value): # шаблон из примеров
-        # r'^users/(?P<username>[\w.@+-]+)$' # шаблон для username
+        if not re.match(r'^[\w.@+-]+\Z', value):  # шаблон из задания, может \Z
+            #  r'^[\w.@+-]+)$' # шаблон из примеров
+            #  r'^users/(?P<username>[\w.@+-]+)$' # шаблон для username
             raise serializers.ValidationError(
                 "Неверный формат имени."
             )
@@ -97,7 +97,8 @@ class TitleSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = Title
 
-    # Нельзя добавлять произведения, которые еще не вышли (год выпуска не может быть больше текущего)
+    # Нельзя добавлять произведения, которые еще не вышли
+    # (год выпуска не может быть больше текущего)
     def validate_year(self, value):
         year = dt.date.today().year
         if not value > year:
