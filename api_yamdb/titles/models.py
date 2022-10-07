@@ -1,12 +1,7 @@
 import uuid
-from email.policy import default
 
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth import get_user_model
 from django.db import models
-
-
-# User = get_user_model() - модель потом переопределяется, полагаю, надобности в этой стороке уже нет
 
 
 class User(AbstractUser):
@@ -58,14 +53,20 @@ class User(AbstractUser):
     confirmation_code = models.UUIDField(
         default=uuid.uuid4(),
         editable=False,
-        unique=True,
-        blank=True, null=True,
+        unique=False,
     )
 
     class Meta:
         ordering = ('username',)
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+
+        constraints = (
+            models.UniqueConstraint(
+                fields=('username', 'confirmation_code',),
+                name='unique_username_confirmation_code'
+            ),
+        )
 
     def __str__(self):
         return self.username
