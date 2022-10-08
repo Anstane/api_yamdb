@@ -1,5 +1,6 @@
 import uuid
 
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -91,12 +92,21 @@ class Genre(models.Model):
 
 class Title(models.Model):
     name = models.TextField()
-    year = models.DateTimeField('Год публикации')
+    year = models.IntegerField('Год публикации')
     description = models.TextField()
     genre = models.ForeignKey(
-        Genre, on_delete=models.CASCADE, related_name='titles')
+        Genre, on_delete=models.CASCADE, related_name='titles',
+        null=True, blank=True)
     category = models.ForeignKey(
-        Category, on_delete=models.CASCADE, related_name='titles')
+        Category, on_delete=models.CASCADE, related_name='titles',
+        null=True, blank=True)
+    rating = models.IntegerField(default=None,
+        null=True, blank=True,
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(10),
+        ]
+    )
 
     def __str__(self):
         return self.name[:15]
@@ -104,22 +114,29 @@ class Title(models.Model):
 
 class Review(models.Model):
     text = models.TextField()
-    score = models.IntegerField()
+    score = models.IntegerField(default=None,
+        null=True, blank=True,
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(10),
+        ]
+    )
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='reviews')
     title = models.ForeignKey(
-        Title, on_delete=models.CASCADE, related_name='reviews')
+        Title, on_delete=models.CASCADE, related_name='reviews',
+        null=True, blank=True)
     pub_date = models.DateTimeField(
         'Дата публикации', auto_now_add=True)
 
     class Meta:
         ordering = ['pub_date']
-        constraints = [
-            models.CheckConstraint(
-                check=models.Q(score__gte=1) & models.Q(score__lt=10),
-                name='Значение score от 1 до 10',
-            )
-        ]
+        constraints = (
+            models.UniqueConstraint(
+                fields=('author', 'title'),
+                name='unique_review'
+            ),
+        )
 
     def __str__(self):
         return self.text[:15]

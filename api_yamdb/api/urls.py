@@ -16,6 +16,7 @@ app_name = 'api'
 
 router = routers.DefaultRouter()
 router.register(r'users', UsersViewSet)
+router.register(r'users/(?P<username>\[a-zA-Z0-9-]+)/', UsersViewSet)
 router.register(r'categories', CategoryViewSet)
 router.register(r'genres', GenreViewSet)
 router.register(r'titles', TitleViewSet)
@@ -29,6 +30,7 @@ router.register(
     CommentViewSet,
     basename='comments'
 )
+
 
 urlpatterns = [
     path('v1/', include(router.urls)),
