@@ -74,6 +74,7 @@ class User(AbstractUser):
 
 # Стоит ли нам обрезать метод __str__ по первым 15 символам?
 class Category(models.Model):
+
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
 

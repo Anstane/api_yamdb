@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from titles.models import User
+from titles.models import User, Category, Genre, Title, Review, Comment
 
 
 class UserAdmin(admin.ModelAdmin):
@@ -28,3 +28,8 @@ class UserAdmin(admin.ModelAdmin):
 
 
 admin.site.register(User, UserAdmin)
+admin.site.register(Category)
+admin.site.register(Genre)
+admin.site.register(Title)
+admin.site.register(Review)
+admin.site.register(Comment)

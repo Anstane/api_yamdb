@@ -11,7 +11,11 @@ from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from api_yamdb import settings
-from .permissions import IsAuthorOrReadOnlyPermission, IsAdmin, IsAdminOrReadOnly
+from .permissions import (
+    IsAuthorOrReadOnlyPermission,
+    IsAdmin,
+    IsAdminOrReadOnly,
+)
 from .mixins import CreateDestroyListViewSet
 from titles.models import (
     User,
@@ -122,6 +126,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = (IsAdmin,)
     filter_backends = (filters.SearchFilter,)
+    lookup_field = 'username'
     search_fields = ('username',)
 
     @action(
@@ -182,7 +187,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 # Пока не знаю как реализовать permisson для администратора и модератора
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (IsAuthorOrReadOnlyPermission, IsAdminOrReadOnly)
+    permission_classes = (IsAuthorOrReadOnlyPermission, )
 
     def get_queryset(self):
         title = get_object_or_404(
@@ -196,6 +201,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
             Title, pk=self.kwargs.get('title_id')
         )
         serializer.save(author=self.request.user, title=title)
+
+    def get_permissions(self) :
+        # Если в GET-запросе требуется получить информацию об объекте
+        if self.action == 'retrieve':
+            # Вернем обновленный перечень используемых пермишенов
+            return (IsAdminOrReadOnly(),)
+        # Для остальных ситуаций оставим текущий перечень пермишенов без изменений
+        return super().get_permissions()
 
 
 # Проблема аналогичная предыдущему вьюсету
