@@ -6,24 +6,26 @@ from django.core.mail import send_mail
 from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework import filters, viewsets, status, response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from api_yamdb import settings
+
+from api_yamdb.settings import EMAIL_FROM_DEFAULT
+from .mixins import CreateDestroyListViewSet
 from .permissions import (
     IsAuthorOrReadOnlyPermission,
     IsAdmin,
     IsAdminOrReadOnly,
+    IsAdminModeratorOrReadOnly
 )
-from .mixins import CreateDestroyListViewSet
 from titles.models import (
     User,
     Category,
     Genre,
     Title,
     Review,
-    Comment,
+    Comment
 )
 from .serializers import (
     UserSerializer,
@@ -78,7 +80,7 @@ def send_confirmation_code(request):
     send_mail(
         username,
         confirmation_code,
-        settings.EMAIL_FROM_DEFAULT,
+        EMAIL_FROM_DEFAULT,
         (email,),
         fail_silently=False,
     )
@@ -116,7 +118,7 @@ def get_token(request):
     return response.Response(
         {'token': str(RefreshToken.for_user(user).access_token)},
         status=status.HTTP_200_OK,
-    )
+    )   
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -128,6 +130,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     lookup_field = 'username'
     search_fields = ('username',)
+    lookup_fields = ('username',)
 
     @action(
         methods=('get', 'patch',),
@@ -184,16 +187,13 @@ class TitleViewSet(viewsets.ModelViewSet):
     filterset_fields = ('category', 'genre', 'name', 'year',)
 
 
-# Пока не знаю как реализовать permisson для администратора и модератора
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (IsAuthorOrReadOnlyPermission, )
+    permission_classes = (IsAuthorOrReadOnlyPermission, IsAdminModeratorOrReadOnly)
+
 
     def get_queryset(self):
-        title = get_object_or_404(
-            Title, pk=self.kwargs.get('title_id')
-        )
-        new_queryset = Review.objects.filter(title=title)
+        new_queryset = Review.objects.select_related('title',)
         return new_queryset
 
     def perform_create(self, serializer):
@@ -211,16 +211,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
 
-# Проблема аналогичная предыдущему вьюсету
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (IsAuthorOrReadOnlyPermission, IsAdminOrReadOnly)
+    permission_classes = (IsAuthorOrReadOnlyPermission, IsAdminModeratorOrReadOnly)
 
     def get_queryset(self):
-        review = get_object_or_404(
-            Review, pk=self.kwargs.get('review_id')
-        )
-        new_queryset = Comment.objects.filter(review=review)
+        new_queryset = Comment.objects.select_related('review')
         return new_queryset
 
     def perform_create(self, serializer):

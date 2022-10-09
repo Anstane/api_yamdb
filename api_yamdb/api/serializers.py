@@ -19,7 +19,7 @@ class UserSerializer(serializers.ModelSerializer):
             "bio",
             "role",
         )
-        lookup_field = "username"
+        lookup_fields = 'username'
         read_only_field = ('role',)
 
 
@@ -74,6 +74,10 @@ class AuthetificationSerializer(serializers.Serializer):
 class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
+        fields = ('name', 'slug',)
+        model = Category
+
+    class Meta:
         fields = '__all__'
         model = Category
 
@@ -81,27 +85,28 @@ class CategorySerializer(serializers.ModelSerializer):
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = '__all__'
+        fields = ('name', 'slug',)
         model = Genre
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    genre = serializers.SlugRelatedField(
-        read_only=True, slug_field='name'
+
+    genre = GenreSerializer(
+        read_only=True, many=True
     )
-    category = serializers.SlugRelatedField(
-        read_only=True, slug_field='name'
+    category = CategorySerializer(
+        read_only=True, many=False
     )
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'name', 'year', 'description', 'genre', 'category', 'rating',)
         model = Title
 
     # Нельзя добавлять произведения, которые еще не вышли
     # (год выпуска не может быть больше текущего)
     def validate_year(self, value):
         year = dt.date.today().year
-        if not value > year:
+        if value > year:
             raise serializers.ValidationError('Проверьте год поблукации!')
         return value
 
@@ -109,22 +114,22 @@ class TitleSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True,
-        slug_field='username'
+        slug_field='username',
+        default=serializers.CurrentUserDefault()
     )
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'text', 'score', 'author', 'pub_date',)
         model = Review
-        read_only_fields = ('title',)
 
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True,
-        slug_field='username'
+        slug_field='username',
+        default=serializers.CurrentUserDefault()
     )
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'pub_date',)
         model = Comment
-        read_only_fields = ('review',)
