@@ -24,7 +24,7 @@ from titles.models import (
     Genre,
     Title,
     Review,
-    Comment,
+    Comment
 )
 from .serializers import (
     UserSerializer,
@@ -188,6 +188,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = (IsAuthorOrReadOnlyPermission, IsAdminModeratorOrReadOnly)
+
 
     def get_queryset(self):
         new_queryset = Review.objects.select_related('title',)
