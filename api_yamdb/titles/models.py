@@ -1,4 +1,6 @@
+from enum import unique
 import uuid
+from wsgiref.validate import validator
 
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import AbstractUser
@@ -96,12 +98,12 @@ class Title(models.Model):
     description = models.TextField()
     genre = models.ForeignKey(
         Genre, on_delete=models.CASCADE, related_name='titles',
-        null=True, blank=True)
+        null=True, blank=False)
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE, related_name='titles',
-        null=True, blank=True)
-    rating = models.IntegerField(default=None,
-        null=True, blank=True,
+        null=True, blank=False)
+    rating = models.IntegerField(
+        null=True, blank=False,
         validators=[
             MinValueValidator(1),
             MaxValueValidator(10),
@@ -114,8 +116,8 @@ class Title(models.Model):
 
 class Review(models.Model):
     text = models.TextField()
-    score = models.IntegerField(default=None,
-        null=True, blank=True,
+    score = models.IntegerField(
+        null=False, blank=True,
         validators=[
             MinValueValidator(1),
             MaxValueValidator(10),
@@ -124,19 +126,13 @@ class Review(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='reviews')
     title = models.ForeignKey(
-        Title, on_delete=models.CASCADE, related_name='reviews',
-        null=True, blank=True)
+        Title, on_delete=models.CASCADE, related_name='reviews')
     pub_date = models.DateTimeField(
         'Дата публикации', auto_now_add=True)
 
     class Meta:
         ordering = ['pub_date']
-        constraints = (
-            models.UniqueConstraint(
-                fields=('author', 'title'),
-                name='unique_review'
-            ),
-        )
+        unique_together = ('author', 'title')
 
     def __str__(self):
         return self.text[:15]

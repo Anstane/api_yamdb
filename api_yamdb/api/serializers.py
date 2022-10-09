@@ -1,4 +1,5 @@
 import datetime as dt
+from enum import unique
 import re
 
 from rest_framework import serializers, validators
@@ -18,7 +19,10 @@ class UserSerializer(serializers.ModelSerializer):
             "bio",
             "role",
         )
-        lookup_fields = 'username'
+        lookup_field = 'username'
+        extra_kwargs = {
+            'url': {'lookup_field': 'username'}
+        }
         read_only_field = ('role',)
 
 
@@ -75,6 +79,10 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('name', 'slug',)
         model = Category
+        lookup_field = 'slug'
+        extra_kwargs = {
+            'url': {'lookup_field': 'slug'}
+        }
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -82,18 +90,27 @@ class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('name', 'slug',)
         model = Genre
+        lookup_field = 'slug'
+        extra_kwargs = {
+            'url': {'lookup_field': 'slug'}
+        }
 
 
-class TitleSerializer(serializers.ModelSerializer):
-    genre = GenreSerializer(
-        read_only=True, many=True
-    )
-    category = CategorySerializer(
-        read_only=True, many=False
-    )
+class TitleReadSerializer(serializers.ModelSerializer):
+    genre = GenreSerializer(read_only=True, many=True)
+    category = CategorySerializer(read_only=True)
 
     class Meta:
-        fields = ('id', 'name', 'year', 'description', 'genre', 'category', 'rating',)
+        fields = ('id', 'name', 'year', 'genre', 'category',)
+        model = Title
+
+
+class TitleWriteSerializer(serializers.ModelSerializer):
+    genre = GenreSerializer(many=True, required=False)
+    category = CategorySerializer(read_only=True,)
+
+    class Meta:
+        fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category')
         model = Title
 
     # Нельзя добавлять произведения, которые еще не вышли
@@ -115,6 +132,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'text', 'score', 'author', 'pub_date',)
         model = Review
+
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(

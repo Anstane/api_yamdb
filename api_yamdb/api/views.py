@@ -6,17 +6,15 @@ from django.core.mail import send_mail
 from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework import filters, viewsets, status, response
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from api_yamdb.settings import EMAIL_FROM_DEFAULT
 from .mixins import CreateDestroyListViewSet
 from .permissions import (
-    IsAuthorOrReadOnlyPermission,
     IsAdmin,
-    IsAdminOrReadOnly,
-    IsAdminModeratorOrReadOnly
+    IsAdminModeratorAuthor
 )
 from titles.models import (
     User,
@@ -30,7 +28,8 @@ from .serializers import (
     UserSerializer,
     CategorySerializer,
     GenreSerializer,
-    TitleSerializer,
+    TitleReadSerializer,
+    TitleWriteSerializer,
     ReviewSerializer,
     CommentSerializer,
     RegistrationSerializer,
@@ -128,7 +127,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdmin,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
-    lookup_fields = ('username',)
+    lookup_fields = 'username'
 
     @action(
         methods=('get', 'patch',),
@@ -164,30 +163,66 @@ class UsersViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(CreateDestroyListViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
+    search_fields = ('name', 'slug',)
+    lookup_field = 'slug'
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            self.permission_classes = (AllowAny,)
+        else:
+            self.permission_classes = (IsAdmin,)
+
+        return super(CategoryViewSet, self).get_permissions()
 
 
 class GenreViewSet(CreateDestroyListViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
+    search_fields = ('name', 'slug',)
+    lookup_field = 'slug'
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            self.permission_classes = (AllowAny,)
+        else:
+            self.permission_classes = (IsAdmin,)
+
+        return super(GenreViewSet, self).get_permissions()
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
-    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category', 'genre', 'name', 'year',)
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            self.permission_classes = (AllowAny,)
+        else:
+            self.permission_classes = (IsAdmin,)
+
+        return super(TitleViewSet, self).get_permissions()
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return TitleReadSerializer
+        return TitleWriteSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (IsAuthorOrReadOnlyPermission, IsAdminModeratorOrReadOnly)
+
+    def get_permissions(self):
+        if self.request.method == 'GET' or self.action == 'retrieve':
+            self.permission_classes = (AllowAny,)
+        if self.request.method == 'POST':
+            self.permission_classes = (IsAuthenticated,)
+        else:
+            self.permission_classes = (IsAdminModeratorAuthor,)
+
+        return super(ReviewViewSet, self).get_permissions()
 
     def get_queryset(self):
         new_queryset = Review.objects.select_related('title',)
@@ -202,7 +237,16 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (IsAuthorOrReadOnlyPermission, IsAdminModeratorOrReadOnly)
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            self.permission_classes = (AllowAny,)
+        if self.request.method == 'POST':
+            self.permission_classes = (IsAuthenticated,)
+        else:
+            self.permission_classes = (IsAdminModeratorAuthor,)
+
+        return super(CommentViewSet, self).get_permissions()
 
     def get_queryset(self):
         new_queryset = Comment.objects.select_related('review')
