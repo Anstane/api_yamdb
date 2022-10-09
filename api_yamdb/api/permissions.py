@@ -7,23 +7,24 @@ class IsAuthorOrReadOnlyPermission(permissions.BasePermission):
     """Автор или только для чтения."""
 
     def has_object_permission(self, request, view, obj):
-        return any((
-            request.method in permissions.SAFE_METHODS,
-            request.user == obj,
-        ))
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        
+        return obj.author == request.user
+
 
 class IsAdmin(permissions.BasePermission):
     """Администратор."""
 
     def has_permission(self, request, view):
         user = request.user
-        return all((
-            user.is_authenticated,
-            any((
-                user.is_superuser,
-                user.role == User.ADMIN,
-            ))
-        ))
+        return (
+            user.is_authenticated
+            and (
+                user.is_superuser
+                or user.role == User.ADMIN
+            )
+        )
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
@@ -31,10 +32,27 @@ class IsAdminOrReadOnly(permissions.BasePermission):
 
     def has_permission(self, request, view):
         user = request.user
-        return any((
-            request.method in permissions.SAFE_METHODS,
-            all((
-                user.is_authenticated,
-                user.role == User.ADMIN,
-            )),
-        ))
+        return (
+            request.method in permissions.SAFE_METHODS
+            or (
+                user.is_authenticated
+                and user.role == User.ADMIN or
+                user.is_superuser
+            )
+        )
+
+
+class IsAdminModeratorOrReadOnly(permissions.BasePermission):
+    """Администратор или только для чтения."""
+
+    def has_permission(self, request, view):
+        user = request.user
+        return (
+            request.method in permissions.SAFE_METHODS
+            or (
+                user.is_authenticated
+                and user.role == User.ADMIN or
+                user.role == User.MODERATOR or
+                user.is_superuser
+            )
+        )

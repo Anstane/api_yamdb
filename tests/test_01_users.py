@@ -270,7 +270,7 @@ class Test01UserAPI:
     @pytest.mark.django_db(transaction=True)
     def test_06_users_username_get_admin(self, admin_client, admin):
         user, moderator = create_users_api(admin_client)
-        response = admin_client.get(f'/api/v1/users/{admin.username}/')
+           
         assert response.status_code != 404, (
             'Страница `/api/v1/users/{username}/` не найдена, проверьте этот адрес в *urls.py*'
         )
