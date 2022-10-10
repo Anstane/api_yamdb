@@ -1,3 +1,4 @@
+from email.mime import base
 from django.urls import include, path
 
 from rest_framework import routers
@@ -15,7 +16,7 @@ from .views import (
 app_name = 'api'
 
 router = routers.DefaultRouter()
-router.register(r'users', UsersViewSet)
+router.register(r'users', UsersViewSet,)
 router.register(r'categories', CategoryViewSet)
 router.register(r'genres', GenreViewSet)
 router.register(r'titles', TitleViewSet)
@@ -29,6 +30,7 @@ router.register(
     CommentViewSet,
     basename='comments'
 )
+
 
 urlpatterns = [
     path('v1/', include(router.urls)),

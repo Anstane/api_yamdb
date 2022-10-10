@@ -1,10 +1,11 @@
 import datetime as dt
+from enum import unique
 import re
+from tkinter.tix import Tree
 
 from rest_framework import serializers, validators
 
 from titles.models import User, Category, Genre, Title, Review, Comment
-
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор модели User."""
@@ -19,7 +20,10 @@ class UserSerializer(serializers.ModelSerializer):
             "bio",
             "role",
         )
-        lookup_field = "username"
+        lookup_field = 'username'
+        extra_kwargs = {
+            'url': {'lookup_field': 'username'}
+        }
         read_only_field = ('role',)
 
 
@@ -74,34 +78,52 @@ class AuthetificationSerializer(serializers.Serializer):
 class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = '__all__'
+        fields = ('name', 'slug',)
         model = Category
+        lookup_field = 'slug'
+        extra_kwargs = {
+            'url': {'lookup_field': 'slug'}
+        }
 
 
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = '__all__'
+        fields = ('name', 'slug',)
         model = Genre
+        lookup_field = 'slug'
+        extra_kwargs = {
+            'url': {'lookup_field': 'slug'}
+        }
 
 
-class TitleSerializer(serializers.ModelSerializer):
-    genre = serializers.SlugRelatedField(
-        read_only=True, slug_field='???'
-    )
-    category = serializers.SlugRelatedField(
-        read_only=True, slug_field='???'
-    )
+class TitleReadSerializer(serializers.ModelSerializer):
+    genre = GenreSerializer(read_only=True, many=True)
+    category = CategorySerializer(read_only=True)
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category',)
         model = Title
 
-    # Нельзя добавлять произведения, которые еще не вышли
-    # (год выпуска не может быть больше текущего)
+
+class TitleWriteSerializer(serializers.ModelSerializer):
+    genre = serializers.SlugRelatedField(
+        slug_field='genre',
+        queryset=Genre.objects.all(),
+        many=True
+    )
+    category = serializers.SlugRelatedField(
+        slug_field='category',
+        queryset=Category.objects.all()
+    )
+    
+    class Meta:
+        fields = ('name', 'year', 'description', 'genre', 'category',)
+        model = Title
+
     def validate_year(self, value):
         year = dt.date.today().year
-        if not value > year:
+        if value > year:
             raise serializers.ValidationError('Проверьте год поблукации!')
         return value
 
@@ -109,22 +131,22 @@ class TitleSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True,
-        slug_field='username'
+        slug_field='username',
+        default=serializers.CurrentUserDefault()
     )
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'text', 'score', 'author', 'pub_date',)
         model = Review
-        read_only_fields = ('title',)
 
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True,
-        slug_field='username'
+        slug_field='username',
+        default=serializers.CurrentUserDefault()
     )
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'pub_date',)
         model = Comment
-        read_only_fields = ('review',)
