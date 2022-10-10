@@ -1,11 +1,12 @@
 import datetime as dt
-from enum import unique
+from msilib.schema import SelfReg
 import re
-from tkinter.tix import Tree
+
+from django.shortcuts import get_object_or_404
 
 from rest_framework import serializers, validators
 
-from titles.models import User, Category, Genre, Title, Review, Comment
+from reviews.models import User, Category, Genre, Title, Review, Comment
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор модели User."""
@@ -78,7 +79,7 @@ class AuthetificationSerializer(serializers.Serializer):
 class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('name', 'slug',)
+        fields = ('name', 'slug')
         model = Category
         lookup_field = 'slug'
         extra_kwargs = {
@@ -89,7 +90,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('name', 'slug',)
+        fields = ('name', 'slug')
         model = Genre
         lookup_field = 'slug'
         extra_kwargs = {
@@ -134,11 +135,25 @@ class ReviewSerializer(serializers.ModelSerializer):
         slug_field='username',
         default=serializers.CurrentUserDefault()
     )
+    title = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='name',
+    )
 
     class Meta:
-        fields = ('id', 'text', 'score', 'author', 'pub_date',)
+        fields = ('id', 'text', 'score', 'author', 'title', 'pub_date',)
         model = Review
-
+    
+    def validate(self, data):
+        request=self.context['request']
+        author = request.user
+        title_id = self.context['view'].kwargs.get('title_id')
+        title = get_object_or_404(Title, pk=title_id)
+        if request.method == 'POST':
+            if Review.objects.filter(title=title, author=author).exists():
+                raise serializers.ValidationError
+        return data
+        
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
