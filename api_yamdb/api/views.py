@@ -116,7 +116,7 @@ def get_token(request):
     return response.Response(
         {'token': str(RefreshToken.for_user(user).access_token)},
         status=status.HTTP_200_OK,
-    )   
+    )
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -127,7 +127,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdmin,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
-    lookup_fields = 'username'
+    lookup_field = 'username'
 
     @action(
         methods=('get', 'patch',),

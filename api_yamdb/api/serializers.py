@@ -1,11 +1,10 @@
 import datetime as dt
-from enum import unique
 import re
-from tkinter.tix import Tree
 
 from rest_framework import serializers, validators
 
 from titles.models import User, Category, Genre, Title, Review, Comment
+
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор модели User."""
@@ -102,7 +101,9 @@ class TitleReadSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
 
     class Meta:
-        fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category',)
+        fields = (
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category',
+        )
         model = Title
 
 
@@ -116,7 +117,7 @@ class TitleWriteSerializer(serializers.ModelSerializer):
         slug_field='category',
         queryset=Category.objects.all()
     )
-    
+
     class Meta:
         fields = ('name', 'year', 'description', 'genre', 'category',)
         model = Title
