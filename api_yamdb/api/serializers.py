@@ -1,6 +1,7 @@
 import datetime as dt
 from enum import unique
 import re
+from tkinter.tix import Tree
 
 from rest_framework import serializers, validators
 
@@ -101,20 +102,25 @@ class TitleReadSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
 
     class Meta:
-        fields = ('id', 'name', 'year', 'genre', 'category',)
+        fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category',)
         model = Title
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
-    genre = GenreSerializer(many=True, required=False)
-    category = CategorySerializer(read_only=True,)
-
+    genre = serializers.SlugRelatedField(
+        slug_field='genre',
+        queryset=Genre.objects.all(),
+        many=True
+    )
+    category = serializers.SlugRelatedField(
+        slug_field='category',
+        queryset=Category.objects.all()
+    )
+    
     class Meta:
-        fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category')
+        fields = ('name', 'year', 'description', 'genre', 'category',)
         model = Title
 
-    # Нельзя добавлять произведения, которые еще не вышли
-    # (год выпуска не может быть больше текущего)
     def validate_year(self, value):
         year = dt.date.today().year
         if value > year:

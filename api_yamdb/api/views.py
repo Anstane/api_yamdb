@@ -198,7 +198,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     filterset_fields = ('category', 'genre', 'name', 'year',)
 
     def get_permissions(self):
-        if self.request.method == 'GET':
+        if self.request.method == 'GET' or self.action == 'retrieve':
             self.permission_classes = (AllowAny,)
         else:
             self.permission_classes = (IsAdmin,)
@@ -206,7 +206,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         return super(TitleViewSet, self).get_permissions()
 
     def get_serializer_class(self):
-        if self.action == 'list':
+        if self.action == 'list' or 'retrive':
             return TitleReadSerializer
         return TitleWriteSerializer
 
@@ -239,7 +239,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
 
     def get_permissions(self):
-        if self.request.method == 'GET':
+        if self.request.method == 'GET' or self.action == 'list' or 'retrieve':
             self.permission_classes = (AllowAny,)
         if self.request.method == 'POST':
             self.permission_classes = (IsAuthenticated,)
