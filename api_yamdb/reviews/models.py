@@ -1,6 +1,4 @@
-from enum import unique
 import uuid
-from wsgiref.validate import validator
 
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import AbstractUser
@@ -98,10 +96,10 @@ class Title(models.Model):
     description = models.TextField()
     genre = models.ForeignKey(
         Genre, on_delete=models.CASCADE, related_name='titles',
-        null=True, blank=False)
+        null=True, blank=True)
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE, related_name='titles',
-        null=True, blank=False)
+        null=True, blank=True)
     rating = models.IntegerField(
         null=True, blank=False,
         validators=[
@@ -132,6 +130,13 @@ class Review(models.Model):
 
     class Meta:
         ordering = ['pub_date']
+
+        constraints = (
+            models.UniqueConstraint(
+                fields=['author', 'title',],
+                name='unique_author_title'
+            ),
+        )
 
     def __str__(self):
         return self.text[:15]
