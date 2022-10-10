@@ -1,10 +1,11 @@
 import datetime as dt
 from enum import unique
 import re
-
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers, validators
 
-from titles.models import User, Category, Genre, Title, Review, Comment
+from reviews.models import User, Category, Genre, Title, Review, Comment
+
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор модели User."""
@@ -106,8 +107,15 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
-    genre = GenreSerializer(many=True, required=False)
-    category = CategorySerializer(read_only=True,)
+    genre = serializers.SlugRelatedField(
+        slug_field='genre',
+        queryset=Genre.objects.all(),
+        many=True
+    )
+    category = serializers.SlugRelatedField(
+        slug_field='category',
+        queryset=Category.objects.all()
+    )
 
     class Meta:
         fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category')
@@ -128,10 +136,24 @@ class ReviewSerializer(serializers.ModelSerializer):
         slug_field='username',
         default=serializers.CurrentUserDefault()
     )
+    title = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='name',
+    )
 
-    class Meta:
-        fields = ('id', 'text', 'score', 'author', 'pub_date',)
+    class Meta :
+        fields = ('id', 'text', 'score', 'author', 'title', 'pub_date',)
         model = Review
+
+    def validate(self, data) :
+        request = self.context['request']
+        author = request.user
+        title_id = self.context['view'].kwargs.get('title_id')
+        title = get_object_or_404(Title, pk=title_id)
+        if request.method == 'POST' :
+            if Review.objects.filter(title=title, author=author).exists() :
+                raise serializers.ValidationError
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):

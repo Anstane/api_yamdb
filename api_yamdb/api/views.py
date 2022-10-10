@@ -14,9 +14,11 @@ from api_yamdb.settings import EMAIL_FROM_DEFAULT
 from .mixins import CreateDestroyListViewSet
 from .permissions import (
     IsAdmin,
-    IsAdminModeratorAuthor
+    IsAdminModeratorAuthor,
+    IsAuthorOrReadOnlyPermission,
+    IsAuthorAdminModeratorOrReadOnly
 )
-from titles.models import (
+from reviews.models import (
     User,
     Category,
     Genre,
@@ -127,7 +129,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdmin,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
-    lookup_fields = 'username'
+    lookup_field = 'username'
 
     @action(
         methods=('get', 'patch',),
@@ -206,27 +208,23 @@ class TitleViewSet(viewsets.ModelViewSet):
         return super(TitleViewSet, self).get_permissions()
 
     def get_serializer_class(self):
-        if self.action == 'list':
+        if self.action == 'list' or self.action == 'create':
             return TitleReadSerializer
         return TitleWriteSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
+    permission_classes = (IsAuthorOrReadOnlyPermission, )
 
     def get_permissions(self):
-        if self.request.method == 'GET' or self.action == 'retrieve':
-            self.permission_classes = (AllowAny,)
-        if self.request.method == 'POST':
-            self.permission_classes = (IsAuthenticated,)
-        else:
-            self.permission_classes = (IsAdminModeratorAuthor,)
-
-        return super(ReviewViewSet, self).get_permissions()
+        if self.action == 'retrieve':
+            return (AllowAny(),)
+        return super().get_permissions()
 
     def get_queryset(self):
-        new_queryset = Review.objects.select_related('title',)
-        return new_queryset
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        return title.reviews.all()
 
     def perform_create(self, serializer):
         title = get_object_or_404(
@@ -237,16 +235,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
+    permission_classes = (IsAuthorAdminModeratorOrReadOnly, )
 
     def get_permissions(self):
-        if self.request.method == 'GET':
-            self.permission_classes = (AllowAny,)
-        if self.request.method == 'POST':
-            self.permission_classes = (IsAuthenticated,)
-        else:
-            self.permission_classes = (IsAdminModeratorAuthor,)
-
-        return super(CommentViewSet, self).get_permissions()
+        if self.action == 'retrieve' or self.action == 'list':
+            return (AllowAny(),)
+        elif self.action == 'create':
+            return (IsAuthenticated(),)
+        return super().get_permissions()
 
     def get_queryset(self):
         new_queryset = Comment.objects.select_related('review')

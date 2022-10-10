@@ -98,10 +98,10 @@ class Title(models.Model):
     description = models.TextField()
     genre = models.ForeignKey(
         Genre, on_delete=models.CASCADE, related_name='titles',
-        null=True, blank=False)
+        null=True, blank=True)
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE, related_name='titles',
-        null=True, blank=False)
+        null=True, blank=True)
     rating = models.IntegerField(
         null=True, blank=False,
         validators=[
