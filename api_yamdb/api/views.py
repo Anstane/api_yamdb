@@ -10,7 +10,12 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAu
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from api_yamdb.settings import EMAIL_FROM_DEFAULT
+from api_yamdb import settings
+from .permissions import (
+    IsAuthorOrReadOnlyPermission,
+    IsAdmin,
+    IsAdminOrReadOnly,
+)
 from .mixins import CreateDestroyListViewSet
 from .permissions import (
     IsAdmin,
@@ -79,7 +84,7 @@ def send_confirmation_code(request):
     send_mail(
         username,
         confirmation_code,
-        EMAIL_FROM_DEFAULT,
+        settings.EMAIL_FROM_DEFAULT,
         (email,),
         fail_silently=False,
     )
