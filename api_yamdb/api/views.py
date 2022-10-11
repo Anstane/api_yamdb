@@ -22,8 +22,7 @@ from reviews.models import (
     Category,
     Genre,
     Title,
-    Review,
-    Comment,
+    Review
 )
 from .serializers import (
     UserSerializer,
@@ -34,7 +33,7 @@ from .serializers import (
     ReviewSerializer,
     CommentSerializer,
     RegistrationSerializer,
-    AuthetificationSerializer,
+    AuthetificationSerializer
 )
 
 
@@ -181,12 +180,13 @@ class GenreViewSet(CreateDestroyListViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('category', 'genre', 'name', 'year',)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year', )
+    search_fields = ('category__name', 'genre__name')
     permission_classes = (IsAuthenticatedOrReadOnly, IsAdminOrReadOnly,)
 
     def get_serializer_class(self):
-        if self.action == 'list' or 'retrive':
+        if self.request.method == 'GET':
             return TitleReadSerializer
         return TitleWriteSerializer
 

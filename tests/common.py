@@ -3,26 +3,6 @@ from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
-def create_reviews(admin_client, admin):
-    def create_review(uclient, title_id, text, score):
-        data = {'text': text, 'score': score}
-        response = uclient.post(f'/api/v1/titles/{title_id}/reviews/', data=data)
-        return response.json()['id']
-
-    titles, _, _ = create_titles(admin_client)
-    user, moderator = create_users_api(admin_client)
-    client_user = auth_client(user)
-    client_moderator = auth_client(moderator)
-    result = list()
-    result.append({'id': create_review(admin_client, titles[0]["id"], 'qwerty', 5),
-                   'author': admin.username, 'text': 'qwerty', 'score': 5})
-    result.append({'id': create_review(client_user, titles[0]["id"], 'qwerty123', 3),
-                   'author': user.username, 'text': 'qwerty123', 'score': 3})
-    result.append({'id': create_review(client_moderator, titles[0]["id"], 'qwerty321', 4),
-                   'author': moderator.username, 'text': 'qwerty321', 'score': 4})
-    return result, titles, user, moderator
-
-
 def create_users_api(admin_client):
     data = {
         'username': 'TestUser',
