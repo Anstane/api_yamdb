@@ -61,8 +61,6 @@ class RegistrationSerializer(serializers.Serializer):
             )
 
         if not re.match(r'^[\w.@+-]+\Z', value):  # шаблон из задания, может \Z
-            #  r'^[\w.@+-]+)$' # шаблон из примеров
-            #  r'^users/(?P<username>[\w.@+-]+)$' # шаблон для username
             raise serializers.ValidationError(
                 "Неверный формат имени."
             )
