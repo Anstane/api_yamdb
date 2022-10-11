@@ -8,6 +8,7 @@ from rest_framework import serializers, validators
 
 from reviews.models import User, Category, Genre, Title, Review, Comment
 
+
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор модели User."""
 
@@ -77,6 +78,7 @@ class AuthetificationSerializer(serializers.Serializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    """Сериализатор категории."""
 
     class Meta:
         fields = ('name', 'slug')
@@ -88,6 +90,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
+    """Сериализатор жанров."""
 
     class Meta:
         fields = ('name', 'slug')
@@ -99,6 +102,8 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
+    """Сериализатор произведений метод POST, PATCH, DELETE."""
+
     genre = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Genre.objects.all(),
@@ -108,7 +113,7 @@ class TitleWriteSerializer(serializers.ModelSerializer):
         slug_field='slug',
         queryset=Category.objects.all()
     )
-    
+
     def validate_year(self, value):
         year = dt.date.today().year
         if value > year:
@@ -121,12 +126,22 @@ class TitleWriteSerializer(serializers.ModelSerializer):
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
+    """Сериализатор произведений метод GET."""
+
     genre = GenreSerializer(read_only=True, many=True,)
     category = CategorySerializer(read_only=True)
     rating = serializers.SerializerMethodField()
 
     class Meta:
-        fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category',)
+        fields = (
+            'id',
+            'name',
+            'year',
+            'rating',
+            'description',
+            'genre',
+            'category'
+        )
         model = Title
 
     def get_rating(self, obj):
@@ -136,6 +151,8 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор модели Review."""
+
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username',
@@ -149,9 +166,9 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'text', 'score', 'author', 'title', 'pub_date',)
         model = Review
-    
+
     def validate(self, data):
-        request=self.context['request']
+        request = self.context['request']
         author = request.user
         title_id = self.context['view'].kwargs.get('title_id')
         title = get_object_or_404(Title, pk=title_id)
@@ -159,9 +176,11 @@ class ReviewSerializer(serializers.ModelSerializer):
             if Review.objects.filter(title=title, author=author).exists():
                 raise serializers.ValidationError
         return data
-        
+
 
 class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор модели Comment."""
+
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username',
