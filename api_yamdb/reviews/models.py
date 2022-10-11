@@ -6,7 +6,7 @@ from django.db import models
 
 
 class User(AbstractUser):
-    """ Класс экземпляра пользователя."""
+    """Класс экземпляра пользователя."""
 
     USER = 'user'
     MODERATOR = 'moderator'
@@ -101,7 +101,7 @@ class Title(models.Model):
         ]
     )
     genre = models.ManyToManyField(
-        Genre
+        Genre,
     )
     category = models.ForeignKey(
         Category,
@@ -136,7 +136,7 @@ class Review(models.Model):
 
         constraints = (
             models.UniqueConstraint(
-                fields=['author', 'title',],
+                fields=['author', 'title'],
                 name='unique_author_title'
             ),
         )

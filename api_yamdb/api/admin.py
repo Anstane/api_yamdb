@@ -1,10 +1,9 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
 
 from reviews.models import User
 
 
-class UserAdmin(admin.ModelAdmin):
+class AdminUser(admin.ModelAdmin):
     """Класс администрирования модели User."""
 
     list_display = (
@@ -27,4 +26,4 @@ class UserAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(User, UserAdmin)
+admin.site.register(User, AdminUser)

@@ -6,12 +6,17 @@ from django.core.mail import send_mail
 from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework import filters, viewsets, status, response
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
+from rest_framework.permissions import (
+    IsAuthenticatedOrReadOnly,
+    AllowAny,
+    IsAuthenticated
+)
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from api_yamdb.settings import EMAIL_FROM_DEFAULT
 from .mixins import CreateDestroyListViewSet
+from .filter import TitleFilter
 from .permissions import (
     IsAdmin,
     IsAdminOrReadOnly,
@@ -116,7 +121,7 @@ def get_token(request):
     return response.Response(
         {'token': str(RefreshToken.for_user(user).access_token)},
         status=status.HTTP_200_OK,
-    )   
+    )
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -161,6 +166,8 @@ class UsersViewSet(viewsets.ModelViewSet):
 
 
 class CategoryViewSet(CreateDestroyListViewSet):
+    """Класс вьюсета модели Category."""
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     filter_backends = (filters.SearchFilter,)
@@ -170,6 +177,8 @@ class CategoryViewSet(CreateDestroyListViewSet):
 
 
 class GenreViewSet(CreateDestroyListViewSet):
+    """Класс вьюсета модели Genre."""
+
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     filter_backends = (filters.SearchFilter,)
@@ -179,10 +188,11 @@ class GenreViewSet(CreateDestroyListViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    """Класс вьюсета модели Title."""
+
     queryset = Title.objects.all()
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year', )
-    search_fields = ('category__name', 'genre__name')
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
     permission_classes = (IsAuthenticatedOrReadOnly, IsAdminOrReadOnly,)
 
     def get_serializer_class(self):
@@ -192,8 +202,13 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    """Класс вьюсета модели Review с определением queryset`а."""
+
     serializer_class = ReviewSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorAdminModeratorOrReadOnly,)
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+        IsAuthorAdminModeratorOrReadOnly
+    )
 
     def get_queryset(self):
         title = get_object_or_404(
@@ -209,8 +224,13 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """Класс вьюсета модели Comment с определением queryset`а."""
+
     serializer_class = CommentSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorAdminModeratorOrReadOnly,)
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+        IsAuthorAdminModeratorOrReadOnly
+    )
 
     def get_queryset(self):
         review = get_object_or_404(
