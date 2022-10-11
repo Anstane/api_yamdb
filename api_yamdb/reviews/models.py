@@ -73,7 +73,6 @@ class User(AbstractUser):
         return self.username
 
 
-# Стоит ли нам обрезать метод __str__ по первым 15 символам?
 class Category(models.Model):
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
@@ -91,21 +90,25 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
-    name = models.TextField()
+    name = models.CharField(max_length=256)
     year = models.IntegerField('Год публикации')
-    description = models.TextField()
-    genre = models.ForeignKey(
-        Genre, on_delete=models.CASCADE, related_name='titles',
-        null=True, blank=True)
-    category = models.ForeignKey(
-        Category, on_delete=models.CASCADE, related_name='titles',
-        null=True, blank=True)
+    description = models.TextField(null=True)
     rating = models.IntegerField(
-        null=True, blank=False,
+        null=True,
         validators=[
             MinValueValidator(1),
             MaxValueValidator(10),
         ]
+    )
+    genre = models.ManyToManyField(
+        Genre
+    )
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        related_name='titles',
+        null=True,
+        blank=True
     )
 
     def __str__(self):
@@ -114,19 +117,19 @@ class Title(models.Model):
 
 class Review(models.Model):
     text = models.TextField()
-    score = models.IntegerField(
-        null=False, blank=True,
-        validators=[
-            MinValueValidator(1),
-            MaxValueValidator(10),
-        ]
-    )
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='reviews')
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews')
     pub_date = models.DateTimeField(
         'Дата публикации', auto_now_add=True)
+    score = models.IntegerField(
+        null=False,
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(10),
+        ]
+    )
 
     class Meta:
         ordering = ['pub_date']

@@ -2,7 +2,7 @@ import csv
 
 from django.core.management.base import BaseCommand, CommandError
 
-from titles.models import (
+from reviews.models import (
     User,
     Category,
     Genre,
@@ -12,7 +12,8 @@ from titles.models import (
 )
 
 
-class Command(BaseCommand):
+""" 
+    class Command(BaseCommand):
     help = 'Import data from .csv files to the database.'
 
     def add_arguments(self, parser):
@@ -21,3 +22,4 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         for csv_file in options['csv_file']:
             dataReader = csv.reader(open(csv_file), delimiter=',', quotechar='"')
+ """

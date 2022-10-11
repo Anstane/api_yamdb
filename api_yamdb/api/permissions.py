@@ -3,16 +3,6 @@ from rest_framework import permissions
 from reviews.models import User
 
 
-class IsAuthorOrReadOnlyPermission(permissions.BasePermission):
-    """Автор или только для чтения."""
-
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        
-        return obj.author == request.user
-
-
 class IsAdmin(permissions.BasePermission):
     """Администратор."""
 
@@ -23,22 +13,6 @@ class IsAdmin(permissions.BasePermission):
             and (
                 user.is_superuser
                 or user.role == User.ADMIN
-            )
-        )
-
-
-class IsAdminModeratorAuthor(permissions.BasePermission):
-    """Администратор."""
-
-    def has_object_permission(self, request, view, obj):
-        user = request.user
-        return (
-            user.is_authenticated
-            and (
-                user.is_superuser
-                or user.role == User.ADMIN
-                or user.role == User.MODERATOR
-                or obj.author == user
             )
         )
 
