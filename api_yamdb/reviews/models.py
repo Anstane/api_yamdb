@@ -93,13 +93,6 @@ class Title(models.Model):
     name = models.CharField(max_length=256)
     year = models.IntegerField('Год публикации')
     description = models.TextField(null=True)
-    rating = models.IntegerField(
-        null=True,
-        validators=[
-            MinValueValidator(1),
-            MaxValueValidator(10),
-        ]
-    )
     genre = models.ManyToManyField(
         Genre,
     )

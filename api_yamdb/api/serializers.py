@@ -117,7 +117,7 @@ class TitleWriteSerializer(serializers.ModelSerializer):
     def validate_year(self, value):
         year = dt.date.today().year
         if value > year:
-            raise serializers.ValidationError('Проверьте год поблукации!')
+            raise serializers.ValidationError('Проверьте год публикации!')
         return value
 
     class Meta:
@@ -130,7 +130,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
     genre = GenreSerializer(read_only=True, many=True,)
     category = CategorySerializer(read_only=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         fields = (
@@ -143,11 +143,6 @@ class TitleReadSerializer(serializers.ModelSerializer):
             'category'
         )
         model = Title
-
-    def get_rating(self, obj):
-        reviews = Review.objects.filter(title_id=obj)
-        result = reviews.all().aggregate(Avg('score'))
-        return result['score__avg']
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -170,9 +165,9 @@ class ReviewSerializer(serializers.ModelSerializer):
     def validate(self, data):
         request = self.context['request']
         author = request.user
-        title_id = self.context['view'].kwargs.get('title_id')
-        title = get_object_or_404(Title, pk=title_id)
         if request.method == 'POST':
+            title_id = self.context['view'].kwargs.get('title_id')
+            title = get_object_or_404(Title, pk=title_id)
             if Review.objects.filter(title=title, author=author).exists():
                 raise serializers.ValidationError
         return data
