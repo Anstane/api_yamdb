@@ -11,6 +11,7 @@ from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from api_yamdb.settings import EMAIL_FROM_DEFAULT
+from .filters import TitleFilter
 from .mixins import CreateDestroyListViewSet
 from .permissions import (
     IsAdmin,
@@ -181,7 +182,7 @@ class GenreViewSet(CreateDestroyListViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year', )
+    filterset_class = TitleFilter
     search_fields = ('category__name', 'genre__name')
     permission_classes = (IsAuthenticatedOrReadOnly, IsAdminOrReadOnly,)
 
