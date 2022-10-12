@@ -1,6 +1,6 @@
 import csv
-# from django.shortcuts import get_object_or_404
-# from reviews.models import Category
+
+DEFAULT_SEPARATOR = ','
 
 def find_relation(err_message):
     """ValueError: Cannot assign "'1'": "Title.category" must be a "Category" instance."""
@@ -28,7 +28,13 @@ def create_item(queryset, item):
     if created:
         print(f'Создан элемент: {item}')
 
-def create_items(file_name, queryset, encoding='UTF-8'):
+def format_list(list_item, separator):
+    list_item = ''.join(list_item)
+    list_item = list_item.split(separator)
+    return list_item
+
+
+def create_items(file_name, queryset, encoding='UTF-8', separator=DEFAULT_SEPARATOR):
     """Читает из файла и сохраняет в таблице элементы."""
 
     with (open(file_name, mode='r', encoding=encoding)) as file_csv:
@@ -37,12 +43,18 @@ def create_items(file_name, queryset, encoding='UTF-8'):
 
         reader = csv.reader(file_csv)
         keys = next(reader)  # Advance past the header
+        if separator != DEFAULT_SEPARATOR:
+            keys = format_list(keys, separator)
+        print(keys)
 
         for row in reader:
+            if separator != DEFAULT_SEPARATOR:
+                row = format_list(row, separator)
 
             item = dict(zip(keys, row))
 
             try:
+                print(row)
                 create_item(queryset, item)
             except ValueError as err:
                 relation, field_name = find_relation(str(err))

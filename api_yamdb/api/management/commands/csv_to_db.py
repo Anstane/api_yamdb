@@ -12,10 +12,18 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         _common.create_items(
+            self.get_path('comments'),
+            models.Comment.objects,
+            None,
+            ';'
+        )
+
+        return
+
+        _common.create_items(
             self.get_path('titles'),
             models.Title.objects,
         )
-
         _common.create_items(
             self.get_path('users'),
             models.User.objects,
@@ -40,10 +48,4 @@ class Command(BaseCommand):
         _common.create_items(
             self.get_path('review'),
             models.Review.objects,
-        )
-
-        _common.create_items(
-            self.get_path('comments'),
-            models.Comment.objects,
-            None,
         )
