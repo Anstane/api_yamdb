@@ -1,5 +1,6 @@
 import uuid
 
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from django.core.mail import send_mail
@@ -190,7 +191,7 @@ class GenreViewSet(CreateDestroyListViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     """Класс вьюсета модели Title."""
 
-    queryset = Title.objects.all()
+    queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     permission_classes = (IsAuthenticatedOrReadOnly, IsAdminOrReadOnly,)
