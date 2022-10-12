@@ -4,7 +4,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from api_yamdb.settings import EMAIL_LENGHT, USER_FIELDS_LENGHT as UFL
+from api_yamdb.settings import USER_FIELDS_LENGHT as UFL
 
 
 class User(AbstractUser):
