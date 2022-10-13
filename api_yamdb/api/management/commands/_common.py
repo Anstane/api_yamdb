@@ -44,7 +44,7 @@ def create_items(
         file_name,
         queryset,
         encoding='UTF-8',
-        separator=DEFAULT_SEPARATOR):    
+        separator=DEFAULT_SEPARATOR):
     """Читает из файла и сохраняет в таблице элементы."""
 
     with (open(file_name, mode='r', encoding=encoding)) as file_csv:
