@@ -1,5 +1,6 @@
 import os
 from datetime import timedelta
+from collections import namedtuple
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -131,3 +132,21 @@ SIMPLE_JWT = {
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 EMAIL_FROM_DEFAULT = 'yandex_praktikum@yandex.ru'
+
+# Model User
+
+NAME_LENGHT = 150
+EMAIL_LENGHT = 254
+CHOISE_LENGHT = 9
+
+UserFieldLenght = namedtuple(
+    'UserFieldLenght',
+    'USERNAME EMAIL FIRST_NAME LAST_NAME ROLE',
+)
+USER_FIELDS_LENGHT = UserFieldLenght(
+    USERNAME=NAME_LENGHT,
+    EMAIL=EMAIL_LENGHT,
+    FIRST_NAME=NAME_LENGHT,
+    LAST_NAME=NAME_LENGHT,
+    ROLE=CHOISE_LENGHT,
+)

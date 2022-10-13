@@ -4,6 +4,8 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from api_yamdb.settings import USER_FIELDS_LENGHT as UFL
+
 
 class User(AbstractUser):
     """Класс экземпляра пользователя."""
@@ -20,24 +22,24 @@ class User(AbstractUser):
 
     username = models.CharField(
         'Логин',
-        max_length=150,
+        max_length=UFL.USERNAME,
         unique=True,
         blank=False, null=False,
     )
     email = models.EmailField(
         'Почта',
-        max_length=254,
+        max_length=UFL.EMAIL,
         unique=True,
         blank=False, null=False,
     )
     first_name = models.CharField(
         'Имя',
-        max_length=150,
+        max_length=UFL.FIRST_NAME,
         blank=True, null=True,
     )
     last_name = models.CharField(
         'Фамилия',
-        max_length=150,
+        max_length=UFL.LAST_NAME,
         blank=True, null=True,
     )
     bio = models.TextField(
@@ -46,7 +48,7 @@ class User(AbstractUser):
     )
     role = models.CharField(
         'Роль',
-        max_length=9,
+        max_length=UFL.ROLE,
         choices=ROLE_CHOICES,
         default=USER,
         blank=False, null=False,
@@ -71,6 +73,18 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+    @property
+    def is_admin(self):
+        return self.role == self.ADMIN or self.is_superuser
+
+    @property
+    def is_moderator(self):
+        return self.role == self.MODERATOR
+
+    @property
+    def is_user(self):
+        return self.role == self.USER
 
 
 class Category(models.Model):
