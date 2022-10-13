@@ -2,12 +2,16 @@ import csv
 
 DEFAULT_SEPARATOR = ','
 
+
 def find_relation(err_message):
-    """ValueError: Cannot assign "'1'": "Title.category" must be a "Category" instance."""
+    """
+    ValueError: Cannot assign "'1'":
+    "Title.category" must be a "Category" instance.
+    """
 
     msg = err_message.split(':')
 
-    relation_id = msg[0].replace('Cannot assign ','')
+    relation_id = msg[0].replace('Cannot assign ', '')
     relation_id = relation_id.replace('"', '')
     relation_id = relation_id.replace("'", '')
 
@@ -18,15 +22,17 @@ def find_relation(err_message):
     model_name = msg[3]
 
     exec(f'from reviews.models import {model_name}')
-    exec(f'from django.shortcuts import get_object_or_404')
+    exec('from django.shortcuts import get_object_or_404')
     item = eval(f'get_object_or_404({model_name}, id={relation_id})')
 
     return item, field_name
+
 
 def create_item(queryset, item):
     item, created = queryset.get_or_create(**item)
     if created:
         print(f'Создан элемент: {item}')
+
 
 def format_list(list_item, separator):
     list_item = ''.join(list_item)
@@ -34,7 +40,11 @@ def format_list(list_item, separator):
     return list_item
 
 
-def create_items(file_name, queryset, encoding='UTF-8', separator=DEFAULT_SEPARATOR):
+def create_items(
+        file_name,
+        queryset,
+        encoding='UTF-8',
+        separator=DEFAULT_SEPARATOR):    
     """Читает из файла и сохраняет в таблице элементы."""
 
     with (open(file_name, mode='r', encoding=encoding)) as file_csv:
